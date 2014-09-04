@@ -1,5 +1,8 @@
 # C.gitignore @ https://github.com/github/gitignore
 
+# c-smc - temp
+c-smc
+
 # Object files
 *.o
 *.ko

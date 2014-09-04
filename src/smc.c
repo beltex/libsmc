@@ -1,20 +1,37 @@
 /*
- * Apple System Management Control (SMC) Tool 
- * Copyright (C) 2006 devnull 
+ * Apple System Management Controller (SMC) API from user space for Intel based
+ * Macs. Works by talking to the AppleSMC.kext (kernel extension), the driver
+ * for the SMC.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
-
+ * smc.c
+ * c-smc
+ *
+ * Copyright (C) 2014  beltex <https://github.com/beltex>
+ *
+ * Based off of fork from:
+ * osx-cpu-temp <https://github.com/lavoiesl/osx-cpu-temp>
+ *
+ * With credits to:
+ *
+ * Copyright (C) 2006 devnull 
+ * Apple System Management Control (SMC) Tool 
+ *
+ * Copyright (C) 2006 Hendrik Holtmann
+ * smcFanControl <https://github.com/hholtmann/smcFanControl>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <stdio.h>
