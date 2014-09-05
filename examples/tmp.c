@@ -5,12 +5,12 @@
 
 int main()
 {
-    if (SMCOpen() != kIOReturnSuccess) {
+    if (open_smc() != kIOReturnSuccess) {
         return -1;
     }
 
     printf("%0.1f°C\n", getTMP(SMC_KEY_CPU_TEMP, CELSIUS));
-    SMCClose();
+    close_smc();
 
     return 0;
 }

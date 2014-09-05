@@ -94,6 +94,10 @@ uint32_t to_uint32_t(char *key)
 }
 
 
+/**
+For converting the dataType return from the SMC to human readable 4 byte
+multi-character constant.
+*/
 void to_string(char *str, UInt32 val)
 {
     str[0] = '\0';
@@ -135,7 +139,18 @@ kern_return_t getErrorCode(kern_return_t err)
     return err & 0x3fff;
 }
 
-kern_return_t SMCOpen(void)
+
+//--------------------------------------------------------------------------
+// MARK: "PUBLIC" METHODS
+//--------------------------------------------------------------------------
+
+
+/**
+Open a connection to the SMC
+    
+:returns: kIOReturnSuccess on successful connection to the SMC.
+*/
+kern_return_t open_smc(void)
 {
     kern_return_t result;
     io_service_t service;
@@ -155,7 +170,13 @@ kern_return_t SMCOpen(void)
     return result;
 }
 
-kern_return_t SMCClose(void)
+
+/**
+Close connection to the SMC
+    
+:returns: kIOReturnSuccess on successful close of connection to the SMC.
+*/
+kern_return_t close_smc(void)
 {
     return IOServiceClose(conn);
 }
