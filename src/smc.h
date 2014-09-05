@@ -46,18 +46,36 @@
 #define IOSERVICE_SMC     "AppleSMC" 
 static const int SMC_KEY_SIZE = 4;
 
+
+//--------------------------------------------------------------------------
+// MARK: ENUMS
+//--------------------------------------------------------------------------
+
+
 typedef enum {
     CELSIUS,
     FAHRENHEIT,
     KELVIN
 } tmp_unit_t;
 
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+    
+These are SMC specific return codes
+*/
 typedef enum {
     kSMCSuccess     = 0,
     kSMCError       = 1,
     kSMCKeyNotFound = 0x84
 } kSMC_t;
 
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+    
+Method selectors
+*/
 typedef enum {
     kSMCUserClientOpen  = 0,
     kSMCUserClientClose = 1,
@@ -69,39 +87,73 @@ typedef enum {
     kSMCGetKeyInfo      = 9
 } selector_t;
 
+
+//--------------------------------------------------------------------------
+// MARK: STRUCTS
+//--------------------------------------------------------------------------
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+*/
 typedef struct {
-    unsigned char    major;
-    unsigned char    minor;
-    unsigned char    build;
-    unsigned char    reserved;
-    unsigned short   release;
+    unsigned char  major;
+    unsigned char  minor;
+    unsigned char  build;
+    unsigned char  reserved;
+    unsigned short release;
 } SMCVersion;
 
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+*/
 typedef struct {
-    uint16_t    version;
-    uint16_t    length;
-    uint32_t    cpuPLimit;
-    uint32_t    gpuPLimit;
-    uint32_t    memPLimit;
+    uint16_t version;
+    uint16_t length;
+    uint32_t cpuPLimit;
+    uint32_t gpuPLimit;
+    uint32_t memPLimit;
 } SMCPLimitData;
 
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+    
+- dataSize : How many values written to SMCParamStruct.bytes
+- dataType : Type of data written to SMCParamStruct.bytes. This lets us know how
+             to interpret it (translate it to human readable)
+*/
 typedef struct {
-    IOByteCount         dataSize;
-    uint32_t            dataType;
-    uint8_t             dataAttributes;
+    IOByteCount dataSize;
+    uint32_t    dataType;
+    uint8_t     dataAttributes;
 } SMCKeyInfoData;
 
+
+/**
+Defined by AppleSMC.kext.
+    
+This is the predefined struct that must be passed to communicate with the
+AppleSMC driver. While the driver is closed source, the definition of this
+struct happened to appear in the Apple PowerManagement project at around
+version 211, and soon after disappeared. It can be seen in the PrivateLib.c
+file under pmconfigd. 
+
+https://www.opensource.apple.com/source/PowerManagement/PowerManagement-211/
+*/
 typedef struct {
-    uint32_t            key;
-    SMCVersion          vers;
-    SMCPLimitData       pLimitData;
-    SMCKeyInfoData      keyInfo;
-    uint8_t             result;
-    uint8_t             status;
-    uint8_t             data8;
-    uint32_t            data32;    
-    uint8_t             bytes[32];
+    uint32_t       key;
+    SMCVersion     vers;
+    SMCPLimitData  pLimitData;
+    SMCKeyInfoData keyInfo;
+    uint8_t        result;
+    uint8_t        status;
+    uint8_t        data8;
+    uint32_t       data32;    
+    uint8_t        bytes[32];
 } SMCParamStruct;
+
 
 typedef struct {
     kSMC_t  kSMC;
@@ -111,7 +163,11 @@ typedef struct {
 } SMCVal_t;
 
 
-// Prototypes
+//--------------------------------------------------------------------------
+// MARK: PROTOTYPES
+//--------------------------------------------------------------------------
+
+
 kern_return_t open_smc(void);
 kern_return_t close_smc(void);
 double get_tmp(char *key, tmp_unit_t unit);
