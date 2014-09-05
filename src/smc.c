@@ -135,6 +135,82 @@ double to_kelvin(double tmp)
 
 
 //--------------------------------------------------------------------------
+// MARK: "PRIVATE" METHODS
+//--------------------------------------------------------------------------
+
+
+/**
+Make a call to the SMC
+    
+:param: inputStruct Struct that holds data telling the SMC what you want
+:param: outputStruct Struct holding the SMC's response
+:returns: I/O Kit return code
+*/
+kern_return_t call_smc(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
+{
+    kern_return_t result;
+    size_t inputStructCnt;
+    size_t outputStructCnt;
+
+    inputStructCnt  = sizeof(SMCParamStruct);
+    outputStructCnt = sizeof(SMCParamStruct);
+
+    result = IOConnectCallStructMethod(conn, kSMCHandleYPCEvent,
+                                             inputStruct,
+                                             inputStructCnt,
+                                             outputStruct,
+                                             &outputStructCnt);
+    
+    if (result != kIOReturnSuccess) {
+        // IOReturn error code lookup
+        // See "Accessing Hardware From Applications -> Handling Errors" Apple doc
+        result = err_get_code(result);
+    }
+
+    return result;
+}
+
+
+/**
+Read data from the SMC
+    
+:param: key The SMC key
+*/
+kern_return_t read_smc(char *key, SMCVal_t *val)
+{
+    kern_return_t result;
+    SMCParamStruct inputStructure;
+    SMCParamStruct outputStructure;
+
+    memset(&inputStructure,  0, sizeof(SMCParamStruct));
+    memset(&outputStructure, 0, sizeof(SMCParamStruct));
+    memset(val, 0, sizeof(SMCVal_t));
+
+    inputStructure.key = to_uint32_t(key);
+    inputStructure.data8 = kSMCGetKeyInfo;
+
+    result = call_smc(&inputStructure, &outputStructure);
+    if (result != kIOReturnSuccess) {
+        return result;
+    }
+
+    val->dataSize = outputStructure.keyInfo.dataSize;
+    to_string(val->dataType, outputStructure.keyInfo.dataType);
+    inputStructure.keyInfo.dataSize = val->dataSize;
+    inputStructure.data8 = kSMCReadKey;
+
+    result = call_smc(&inputStructure, &outputStructure);
+    if (result != kIOReturnSuccess) {
+        return result;
+    }
+
+    memcpy(val->bytes, outputStructure.bytes, sizeof(outputStructure.bytes));
+
+    return result;
+}
+
+
+//--------------------------------------------------------------------------
 // MARK: "PUBLIC" METHODS
 //--------------------------------------------------------------------------
 
@@ -176,63 +252,6 @@ kern_return_t close_smc(void)
 }
 
 
-kern_return_t call_smc(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
-{
-    kern_return_t result;
-    size_t inputStructCnt;
-    size_t outputStructCnt;
-
-    inputStructCnt  = sizeof(SMCParamStruct);
-    outputStructCnt = sizeof(SMCParamStruct);
-
-    result = IOConnectCallStructMethod(conn, kSMCHandleYPCEvent,
-                                             inputStruct,
-                                             inputStructCnt,
-                                             outputStruct,
-                                             &outputStructCnt);
-    
-    if (result != kIOReturnSuccess) {
-        // IOReturn error code lookup
-        // See "Accessing Hardware From Applications -> Handling Errors" Apple doc
-        result = err_get_code(result);
-    }
-
-    return result;
-}
-
-kern_return_t read_smc(char *key, SMCVal_t *val)
-{
-    kern_return_t result;
-    SMCParamStruct inputStructure;
-    SMCParamStruct outputStructure;
-
-    memset(&inputStructure,  0, sizeof(SMCParamStruct));
-    memset(&outputStructure, 0, sizeof(SMCParamStruct));
-    memset(val, 0, sizeof(SMCVal_t));
-
-    inputStructure.key = to_uint32_t(key);
-    inputStructure.data8 = kSMCGetKeyInfo;
-
-    result = call_smc(&inputStructure, &outputStructure);
-    if (result != kIOReturnSuccess) {
-        return result;
-    }
-
-    val->dataSize = outputStructure.keyInfo.dataSize;
-    to_string(val->dataType, outputStructure.keyInfo.dataType);
-    inputStructure.keyInfo.dataSize = val->dataSize;
-    inputStructure.data8 = kSMCReadKey;
-
-    result = call_smc(&inputStructure, &outputStructure);
-    if (result != kIOReturnSuccess) {
-        return result;
-    }
-
-    memcpy(val->bytes, outputStructure.bytes, sizeof(outputStructure.bytes));
-
-    return result;
-}
-
 double get_tmp(char *key, tmp_unit_t unit)
 {
     SMCVal_t val;
@@ -265,7 +284,7 @@ double get_tmp(char *key, tmp_unit_t unit)
 
 
 //--------------------------------------------------------------------------
-// MARK: METHODS - FANS
+// MARK: FAN METHODS
 //--------------------------------------------------------------------------
 
 
