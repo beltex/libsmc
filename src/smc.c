@@ -84,6 +84,32 @@ void toString(char *str, UInt32 val)
             (unsigned int) val);
 }
 
+
+//--------------------------------------------------------------------------
+// MARK: HELPERS - TMP CONVERSION
+//--------------------------------------------------------------------------
+
+
+/**
+Celsius to Fahrenheit
+*/
+double to_fahrenheit(double tmp)
+{
+    // http://en.wikipedia.org/wiki/Fahrenheit#Definition_and_conversions
+    return (tmp * 1.8) + 32;
+}
+
+
+/**
+Celsius to Kelvin
+*/
+double to_kelvin(double tmp)
+{
+    // http://en.wikipedia.org/wiki/Kelvin
+    return tmp + 273.15;
+}
+
+
 kern_return_t SMCOpen(void)
 {
     kern_return_t result;
@@ -166,7 +192,7 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     return result;
 }
 
-double getTMP(char *key)
+double getTMP(char *key, tmp_unit_t unit)
 {
     SMCVal_t val;
     kern_return_t result;
@@ -176,7 +202,20 @@ double getTMP(char *key)
     if (result == kIOReturnSuccess && val.dataSize > 0
                                    && strcmp(val.dataType, DATATYPE_SP78) == 0) {
         // convert sp78 value to temperature
-        return val.bytes[0];
+        double tmp = val.bytes[0];      
+  
+        switch (unit) {
+            case CELSIUS:
+                break;
+            case FAHRENHEIT:
+                tmp = to_fahrenheit(tmp);
+                break;
+            case KELVIN:
+                tmp = to_kelvin(tmp);
+                break;
+        }
+
+        return tmp;
     }
 
     // read failed

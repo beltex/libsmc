@@ -47,9 +47,9 @@
 static const int SMC_KEY_SIZE = 4;
 
 typedef enum {
-    Celsius,
-    Fahrenheit,
-    Kelvin
+    CELSIUS,
+    FAHRENHEIT,
+    KELVIN
 } tmp_unit_t;
 
 typedef enum {
@@ -112,6 +112,6 @@ typedef struct {
 
 
 // Prototypes
-double getTMP(char *key);
+double getTMP(char *key, tmp_unit_t unit);
 kern_return_t SMCOpen(void);
 kern_return_t SMCClose(void);
