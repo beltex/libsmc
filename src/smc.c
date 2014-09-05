@@ -42,26 +42,45 @@
 
 static io_connect_t conn;
 
-UInt fpe2(uint8_t data[32])
+
+//--------------------------------------------------------------------------
+// MARK: HELPERS - TYPE CONVERSION
+//--------------------------------------------------------------------------
+
+
+/**
+Convert data from SMC of fpe2 type to human readable.
+    
+:param: data Data from the SMC to be converted. Assumed data size of 2.
+:returns: Converted data
+*/
+UInt from_fpe2(uint8_t data[32])
 {
     UInt ans = 0;
     
+    // Data type for fan calls - fpe2
+    // This is assumend to mean floating point, with 2 exponent bits
+    // http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
     ans += data[0] << 6;
     ans += data[1] << 2;
 
     return ans;
 }
 
-kern_return_t getErrorCode(kern_return_t err)
-{
-    return err & 0x3fff;
-}
 
-uint32_t toUInt32(char *key)
+/**
+Convert SMC key to uint32_t. This must be done to pass it to the SMC.
+    
+:param: key The SMC key to convert
+:returns: uint32_t translation.
+          Returns zero if key is not 4 characters in length.
+*/
+uint32_t to_uint32_t(char *key)
 {
-    uint32_t ans = 0;
+    uint32_t ans   = 0;
     uint32_t shift = 24;
 
+    // SMC key is expected to be 4 bytes - thus 4 chars
     if (strlen(key) != SMC_KEY_SIZE) {
         return 0;
     }
@@ -74,7 +93,8 @@ uint32_t toUInt32(char *key)
     return ans;
 }
 
-void toString(char *str, UInt32 val)
+
+void to_string(char *str, UInt32 val)
 {
     str[0] = '\0';
     sprintf(str, "%c%c%c%c", 
@@ -109,6 +129,11 @@ double to_kelvin(double tmp)
     return tmp + 273.15;
 }
 
+
+kern_return_t getErrorCode(kern_return_t err)
+{
+    return err & 0x3fff;
+}
 
 kern_return_t SMCOpen(void)
 {
@@ -169,7 +194,7 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     memset(&outputStructure, 0, sizeof(SMCParamStruct));
     memset(val, 0, sizeof(SMCVal_t));
 
-    inputStructure.key = toUInt32(key);
+    inputStructure.key = to_uint32_t(key);
     inputStructure.data8 = kSMCGetKeyInfo;
 
     result = callSMC(&inputStructure, &outputStructure);
@@ -178,7 +203,7 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     }
 
     val->dataSize = outputStructure.keyInfo.dataSize;
-    toString(val->dataType, outputStructure.keyInfo.dataType);
+    to_string(val->dataType, outputStructure.keyInfo.dataType);
     inputStructure.keyInfo.dataSize = val->dataSize;
     inputStructure.data8 = kSMCReadKey;
 
