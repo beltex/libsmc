@@ -134,10 +134,6 @@ double to_kelvin(double tmp)
 }
 
 
-kern_return_t getErrorCode(kern_return_t err)
-{
-    return err & 0x3fff;
-}
 
 
 //--------------------------------------------------------------------------
@@ -197,9 +193,10 @@ kern_return_t callSMC(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
                                              outputStruct,
                                              &outputStructCnt);
     
-    // Determine the exact error code
     if (result != kIOReturnSuccess) {
-        result = getErrorCode(result);
+        // IOReturn error code lookup
+        // See "Accessing Hardware From Applications -> Handling Errors" Apple doc
+        result = err_get_code(result);
     }
 
     return result;
