@@ -54,7 +54,7 @@ Convert data from SMC of fpe2 type to human readable.
 :param: data Data from the SMC to be converted. Assumed data size of 2.
 :returns: Converted data
 */
-UInt from_fpe2(uint8_t data[32])
+static UInt from_fpe2(uint8_t data[32])
 {
     UInt ans = 0;
     
@@ -75,7 +75,7 @@ Convert SMC key to uint32_t. This must be done to pass it to the SMC.
 :returns: uint32_t translation.
           Returns zero if key is not 4 characters in length.
 */
-uint32_t to_uint32_t(char *key)
+static uint32_t to_uint32_t(char *key)
 {
     uint32_t ans   = 0;
     uint32_t shift = 24;
@@ -98,7 +98,7 @@ uint32_t to_uint32_t(char *key)
 For converting the dataType return from the SMC to human readable 4 byte
 multi-character constant.
 */
-void to_string(char *str, UInt32 val)
+static void to_string(char *str, UInt32 val)
 {
     str[0] = '\0';
     sprintf(str, "%c%c%c%c", 
@@ -117,7 +117,7 @@ void to_string(char *str, UInt32 val)
 /**
 Celsius to Fahrenheit
 */
-double to_fahrenheit(double tmp)
+static double to_fahrenheit(double tmp)
 {
     // http://en.wikipedia.org/wiki/Fahrenheit#Definition_and_conversions
     return (tmp * 1.8) + 32;
@@ -127,7 +127,7 @@ double to_fahrenheit(double tmp)
 /**
 Celsius to Kelvin
 */
-double to_kelvin(double tmp)
+static double to_kelvin(double tmp)
 {
     // http://en.wikipedia.org/wiki/Kelvin
     return tmp + 273.15;
@@ -135,7 +135,7 @@ double to_kelvin(double tmp)
 
 
 //--------------------------------------------------------------------------
-// MARK: "PRIVATE" METHODS
+// MARK: "PRIVATE" FUNCTIONS
 //--------------------------------------------------------------------------
 
 
@@ -146,7 +146,8 @@ Make a call to the SMC
 :param: outputStruct Struct holding the SMC's response
 :returns: I/O Kit return code
 */
-kern_return_t call_smc(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
+static kern_return_t call_smc(SMCParamStruct *inputStruct,
+                              SMCParamStruct *outputStruct)
 {
     kern_return_t result;
     size_t inputStructCnt;
@@ -176,7 +177,7 @@ Read data from the SMC
     
 :param: key The SMC key
 */
-kern_return_t read_smc(char *key, SMCVal_t *val)
+static kern_return_t read_smc(char *key, SMCVal_t *val)
 {
     kern_return_t result;
     SMCParamStruct inputStructure;
@@ -211,7 +212,7 @@ kern_return_t read_smc(char *key, SMCVal_t *val)
 
 
 //--------------------------------------------------------------------------
-// MARK: "PUBLIC" METHODS
+// MARK: "PUBLIC" FUNCTIONS
 //--------------------------------------------------------------------------
 
 
@@ -284,7 +285,7 @@ double get_tmp(char *key, tmp_unit_t unit)
 
 
 //--------------------------------------------------------------------------
-// MARK: FAN METHODS
+// MARK: FAN FUNCTIONS
 //--------------------------------------------------------------------------
 
 
