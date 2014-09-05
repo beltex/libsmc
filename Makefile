@@ -1,16 +1,10 @@
 CC     = cc
 CFLAGS = -O2 -Wall
 INC    = -framework IOKit
-PREFIX = /usr/local
 EXEC   = c-smc
 
-build : $(EXEC)
-
-clean : 
-	rm $(EXEC)
-
-$(EXEC) : src/smc.c
+$(EXEC) : src/smc.c examples/tmp.c
 	$(CC) $(CFLAGS) $(INC) -o $@ $?
 
-install : $(EXEC)
-	install $(EXEC) $(PREFIX)/bin
+clean: 
+	rm $(EXEC)

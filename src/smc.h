@@ -113,3 +113,5 @@ typedef struct {
 
 // Prototypes
 double getTMP(char *key);
+kern_return_t SMCOpen(void);
+kern_return_t SMCClose(void);

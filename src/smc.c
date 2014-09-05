@@ -104,7 +104,7 @@ kern_return_t SMCOpen(void)
     return result;
 }
 
-kern_return_t SMCClose()
+kern_return_t SMCClose(void)
 {
     return IOServiceClose(conn);
 }
@@ -181,16 +181,4 @@ double getTMP(char *key)
 
     // read failed
     return 0.0;
-}
-
-int main(int argc, char *argv[])
-{
-    if (SMCOpen() != kIOReturnSuccess) {
-        return -1;
-    }
-
-    printf("%0.1f°C\n", getTMP(SMC_KEY_CPU_TEMP));
-    SMCClose();
-
-    return 0;
 }
