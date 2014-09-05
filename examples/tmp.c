@@ -9,7 +9,7 @@ int main()
         return -1;
     }
 
-    printf("%0.1f°C\n", getTMP(SMC_KEY_CPU_TEMP, CELSIUS));
+    printf("%0.1f°C\n", get_tmp(SMC_KEY_CPU_TEMP, CELSIUS));
     close_smc();
 
     return 0;

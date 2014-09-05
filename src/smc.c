@@ -134,8 +134,6 @@ double to_kelvin(double tmp)
 }
 
 
-
-
 //--------------------------------------------------------------------------
 // MARK: "PUBLIC" METHODS
 //--------------------------------------------------------------------------
@@ -178,7 +176,7 @@ kern_return_t close_smc(void)
 }
 
 
-kern_return_t callSMC(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
+kern_return_t call_smc(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
 {
     kern_return_t result;
     size_t inputStructCnt;
@@ -202,7 +200,7 @@ kern_return_t callSMC(SMCParamStruct *inputStruct, SMCParamStruct *outputStruct)
     return result;
 }
 
-kern_return_t SMCReadKey(char *key, SMCVal_t *val)
+kern_return_t read_smc(char *key, SMCVal_t *val)
 {
     kern_return_t result;
     SMCParamStruct inputStructure;
@@ -215,7 +213,7 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     inputStructure.key = to_uint32_t(key);
     inputStructure.data8 = kSMCGetKeyInfo;
 
-    result = callSMC(&inputStructure, &outputStructure);
+    result = call_smc(&inputStructure, &outputStructure);
     if (result != kIOReturnSuccess) {
         return result;
     }
@@ -225,7 +223,7 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     inputStructure.keyInfo.dataSize = val->dataSize;
     inputStructure.data8 = kSMCReadKey;
 
-    result = callSMC(&inputStructure, &outputStructure);
+    result = call_smc(&inputStructure, &outputStructure);
     if (result != kIOReturnSuccess) {
         return result;
     }
@@ -235,12 +233,12 @@ kern_return_t SMCReadKey(char *key, SMCVal_t *val)
     return result;
 }
 
-double getTMP(char *key, tmp_unit_t unit)
+double get_tmp(char *key, tmp_unit_t unit)
 {
     SMCVal_t val;
     kern_return_t result;
 
-    result = SMCReadKey(key, &val);
+    result = read_smc(key, &val);
     // read succeeded - check returned value
     if (result == kIOReturnSuccess && val.dataSize > 0
                                    && strcmp(val.dataType, DATATYPE_SP78) == 0) {

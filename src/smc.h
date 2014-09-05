@@ -114,4 +114,4 @@ typedef struct {
 // Prototypes
 kern_return_t open_smc(void);
 kern_return_t close_smc(void);
-double getTMP(char *key, tmp_unit_t unit);
+double get_tmp(char *key, tmp_unit_t unit);
