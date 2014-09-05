@@ -267,3 +267,32 @@ double getTMP(char *key, tmp_unit_t unit)
     // read failed
     return 0.0;
 }
+
+
+//--------------------------------------------------------------------------
+// MARK: METHODS - FANS
+//--------------------------------------------------------------------------
+
+
+/**
+Get the current speed (RPM - revolutions per minute) of a fan.
+    
+:param: num The number of the fan to check
+:returns: The fan RPM. If the fan is not found, or an error occurs, return
+          will be zero
+*/
+UInt get_fan_rpm(UInt num)
+{
+    return 0;
+}
+
+
+/**
+Get the number of fans on this machine.
+
+:returns: The number of fans
+*/
+UInt get_num_fans(void)
+{
+    return 0;
+}
