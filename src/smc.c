@@ -180,32 +180,34 @@ Read data from the SMC
 static kern_return_t read_smc(char *key, SMCVal_t *val)
 {
     kern_return_t result;
-    SMCParamStruct inputStructure;
-    SMCParamStruct outputStructure;
+    SMCParamStruct inputStruct;
+    SMCParamStruct outputStruct;
 
-    memset(&inputStructure,  0, sizeof(SMCParamStruct));
-    memset(&outputStructure, 0, sizeof(SMCParamStruct));
+    memset(&inputStruct,  0, sizeof(SMCParamStruct));
+    memset(&outputStruct, 0, sizeof(SMCParamStruct));
     memset(val, 0, sizeof(SMCVal_t));
 
-    inputStructure.key = to_uint32_t(key);
-    inputStructure.data8 = kSMCGetKeyInfo;
+    // First call to AppleSMC - get key info
+    inputStruct.key = to_uint32_t(key);
+    inputStruct.data8 = kSMCGetKeyInfo;
 
-    result = call_smc(&inputStructure, &outputStructure);
-    if (result != kIOReturnSuccess) {
+    result = call_smc(&inputStruct, &outputStruct);
+    if (result != kIOReturnSuccess & outputStruct.result != kSMCSuccess) {
         return result;
     }
 
-    val->dataSize = outputStructure.keyInfo.dataSize;
-    to_string(val->dataType, outputStructure.keyInfo.dataType);
-    inputStructure.keyInfo.dataSize = val->dataSize;
-    inputStructure.data8 = kSMCReadKey;
+    // Second call to AppleSMC - now we can get the data
+    val->dataSize = outputStruct.keyInfo.dataSize;
+    to_string(val->dataType, outputStruct.keyInfo.dataType);
+    inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
+    inputStruct.data8 = kSMCReadKey;
 
-    result = call_smc(&inputStructure, &outputStructure);
-    if (result != kIOReturnSuccess) {
+    result = call_smc(&inputStruct, &outputStruct);
+    if (result != kIOReturnSuccess & outputStruct.result != kSMCSuccess) {
         return result;
     }
 
-    memcpy(val->bytes, outputStructure.bytes, sizeof(outputStructure.bytes));
+    memcpy(val->bytes, outputStruct.bytes, sizeof(outputStruct.bytes));
 
     return result;
 }
