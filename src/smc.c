@@ -211,6 +211,17 @@ static kern_return_t read_smc(char *key, SMCVal_t *val)
 }
 
 
+/**
+Write data to the SMC.
+
+:returns: IOReturn IOKit return code
+*/
+static kern_return_t write_smc(char *key, SMCVal_t *val)
+{
+    return kIOReturnSuccess;
+}
+
+
 //--------------------------------------------------------------------------
 // MARK: "PUBLIC" FUNCTIONS
 //--------------------------------------------------------------------------
@@ -253,6 +264,28 @@ kern_return_t close_smc(void)
 }
 
 
+/**
+Check if an SMC key is valid. Useful for determining if a certain machine has
+particular sensor or fan for example.
+    
+:param: key The SMC key to check. 4 byte multi-character constant. Must be 4
+            characters in length.
+:returns: True if the key is found, false otherwise
+*/
+bool is_key_valid(char *key)
+{
+    return true;
+}
+
+
+/**
+Get the current temperature from a sensor
+    
+:param: key The temperature sensor to read from
+:param: unit The unit for the temperature value.
+:returns: Temperature of sensor. If the sensor is not found, or an error
+          occurs, return will be zero
+*/
 double get_tmp(char *key, tmp_unit_t unit)
 {
     SMCVal_t val;
@@ -310,4 +343,21 @@ Get the number of fans on this machine.
 UInt get_num_fans(void)
 {
     return 0;
+}
+
+
+/**
+Set the speed (RPM - revolutions per minute) of a fan. This method requires root
+privlages.
+
+WARNING: You are playing with hardware here, BE CAREFUL.
+
+:param: num The number of the fan to set
+:param: rpm The speed you would like to set the fan to.
+:param: auth Should the function do authentication?
+:return: True if successful, false otherwise
+*/
+bool set_fan_rpm(UInt num, UInt rpm, bool auth)
+{
+    return true;
 }
