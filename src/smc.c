@@ -58,9 +58,9 @@ Convert data from SMC of fpe2 type to human readable.
 :param: data Data from the SMC to be converted. Assumed data size of 2.
 :returns: Converted data
 */
-static UInt from_fpe2(uint8_t data[32])
+static unsigned int from_fpe2(uint8_t data[32])
 {
-    UInt ans = 0;
+    unsigned int ans = 0;
     
     // Data type for fan calls - fpe2
     // This is assumend to mean floating point, with 2 exponent bits
@@ -302,10 +302,10 @@ double get_tmp(char *key, tmp_unit_t unit)
     smc_return_t  result_smc;
 
     result = read_smc(key, &result_smc);
-    // read succeeded - check returned value
+    
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 2   &&
-          strcmp(result_smc.dataType, DATATYPE_SP78) == 0)) {
+          strcmp(result_smc.dataType, DATA_TYPE_SP78) == 0)) {
         // Error
         return 0.0;
     }
@@ -336,13 +336,26 @@ double get_tmp(char *key, tmp_unit_t unit)
 /**
 Get the current speed (RPM - revolutions per minute) of a fan.
     
-:param: num The number of the fan to check
+:param: fan_num The number of the fan to check
 :returns: The fan RPM. If the fan is not found, or an error occurs, return
           will be zero
 */
-UInt get_fan_rpm(UInt num)
+unsigned int get_fan_rpm(unsigned int fan_num)
 {
-    return 0;
+    kern_return_t result;
+    smc_return_t  result_smc;
+
+    // FIXME: Use fan_num for key
+    result = read_smc("F0Ac", &result_smc);
+
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 2   &&
+          strcmp(result_smc.dataType, DATA_TYPE_FPE2) == 0)) {
+        // Error
+        return 0;
+    }
+
+    return from_fpe2(result_smc.data);
 }
 
 
@@ -351,7 +364,7 @@ Get the number of fans on this machine.
 
 :returns: The number of fans
 */
-UInt get_num_fans(void)
+unsigned int get_num_fans(void)
 {
     return 0;
 }
@@ -363,12 +376,12 @@ privlages.
 
 WARNING: You are playing with hardware here, BE CAREFUL.
 
-:param: num The number of the fan to set
+:param: fan_num The number of the fan to set
 :param: rpm The speed you would like to set the fan to.
 :param: auth Should the function do authentication?
 :return: True if successful, false otherwise
 */
-bool set_fan_rpm(UInt num, UInt rpm, bool auth)
+bool set_fan_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 {
     return true;
 }

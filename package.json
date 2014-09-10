@@ -1,6 +1,6 @@
 {
   "name": "c-smc",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repo": "beltex/c-smc",
   "description": "Apple SMC API in C",
   "keywords:" ["apple", "osx", "smc"],

@@ -34,11 +34,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#define DATATYPE_FPE2         "fpe2"
-#define DATATYPE_UINT8        "ui8 "
-#define DATATYPE_UINT16       "ui16"
-#define DATATYPE_UINT32       "ui32"
-#define DATATYPE_SP78         "sp78"
+#define DATA_TYPE_FPE2         "fpe2"
+#define DATA_TYPE_UINT8        "ui8 "
+#define DATA_TYPE_UINT16       "ui16"
+#define DATA_TYPE_UINT32       "ui32"
+#define DATA_TYPE_SP78         "sp78"
 
 // key values
 #define SMC_KEY_CPU_TEMP      "TC0D"
@@ -157,7 +157,7 @@ typedef struct {
 
 
 typedef struct {
-    char     data[32];
+    uint8_t  data[32];
     char     dataType[5];
     uint32_t dataSize;
     kSMC_t   kSMC;
@@ -172,3 +172,4 @@ typedef struct {
 kern_return_t open_smc(void);
 kern_return_t close_smc(void);
 double get_tmp(char *key, tmp_unit_t unit);
+UInt get_fan_rpm(UInt fan_num);
