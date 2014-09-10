@@ -40,6 +40,10 @@
 
 #include "smc.h"
 
+
+/**
+Our connection to the SMC
+*/
 static io_connect_t conn;
 
 
@@ -98,14 +102,16 @@ static uint32_t to_uint32_t(char *key)
 For converting the dataType return from the SMC to human readable 4 byte
 multi-character constant.
 */
-static void to_string(char *str, UInt32 val)
+static void to_string(uint32_t val, char *dataType)
 {
-    str[0] = '\0';
-    sprintf(str, "%c%c%c%c", 
-            (unsigned int) val >> 24,
-            (unsigned int) val >> 16,
-            (unsigned int) val >> 8,
-            (unsigned int) val);
+    int shift = 24;
+
+    for (int i = 0; i < SMC_KEY_SIZE; i++) {
+        // To get each char, we shift it into the lower 8 bits, and then & by
+        // 255 to insolate it
+        dataType[i] = (val >> shift) & 0xff;
+        shift -= 8;
+    }
 }
 
 
@@ -198,7 +204,7 @@ static kern_return_t read_smc(char *key, SMCVal_t *val)
 
     // Second call to AppleSMC - now we can get the data
     val->dataSize = outputStruct.keyInfo.dataSize;
-    to_string(val->dataType, outputStruct.keyInfo.dataType);
+    to_string(outputStruct.keyInfo.dataType, val->dataType);
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
     inputStruct.data8 = kSMCReadKey;
 

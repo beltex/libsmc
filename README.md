@@ -1,7 +1,7 @@
 c-smc
 =====
 
-Apple System Management Controller (SMC) API in C from user space for Intel
+Apple System Management Controller (SMC) API in pure C from user space for Intel
 based Macs. The API works by talking to the AppleSMC.kext (kernel
 extension), the closed source driver for the SMC.
 
