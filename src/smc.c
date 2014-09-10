@@ -198,7 +198,9 @@ static kern_return_t read_smc(char *key, smc_return_t *smc_return)
     inputStruct.data8 = kSMCGetKeyInfo;
 
     result = call_smc(&inputStruct, &outputStruct);
-    if (result != kIOReturnSuccess & outputStruct.result != kSMCSuccess) {
+    smc_return->kSMC = outputStruct.result;       
+    
+    if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
 
@@ -211,7 +213,9 @@ static kern_return_t read_smc(char *key, smc_return_t *smc_return)
     inputStruct.data8 = kSMCReadKey;
 
     result = call_smc(&inputStruct, &outputStruct);
-    if (result != kIOReturnSuccess & outputStruct.result != kSMCSuccess) {
+    smc_return->kSMC = outputStruct.result;       
+    
+    if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
 
@@ -284,7 +288,23 @@ particular sensor or fan for example.
 */
 bool is_key_valid(char *key)
 {
-    return true;
+    bool ans = false;
+    kern_return_t result;
+    smc_return_t  result_smc;
+  
+    if (strlen(key) != SMC_KEY_SIZE) {
+        printf("ERROR: Invalid key size - must be 4 chars\n");
+        return ans;
+    }
+ 
+    // Try a read and see if it succeeds
+    result = read_smc(key, &result_smc);
+    
+    if (result == kIOReturnSuccess && result_smc.kSMC == kSMCSuccess) {
+        ans = true;
+    }
+
+    return ans;
 }
 
 
@@ -381,7 +401,7 @@ WARNING: You are playing with hardware here, BE CAREFUL.
 :param: auth Should the function do authentication?
 :return: True if successful, false otherwise
 */
-bool set_fan_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
+bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 {
     return true;
 }

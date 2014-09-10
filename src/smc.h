@@ -171,5 +171,6 @@ typedef struct {
 
 kern_return_t open_smc(void);
 kern_return_t close_smc(void);
+bool is_key_valid(char *key);
 double get_tmp(char *key, tmp_unit_t unit);
 UInt get_fan_rpm(UInt fan_num);
