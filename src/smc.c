@@ -73,6 +73,19 @@ static unsigned int from_fpe2(uint8_t data[32])
 
 
 /**
+Convert to fpe2 data type to be passed to SMC.
+
+:param: val Value to convert
+:param: data Pointer to data array to place result
+*/
+static void to_fpe2(unsigned int val, uint8_t *data)
+{
+    data[0] = val >> 6;
+    data[1] = (val << 2) ^ (data[0] << 8); 
+}
+
+
+/**
 Convert SMC key to uint32_t. This must be done to pass it to the SMC.
     
 :param: key The SMC key to convert
@@ -183,7 +196,7 @@ Read data from the SMC
     
 :param: key The SMC key
 */
-static kern_return_t read_smc(char *key, smc_return_t *smc_return)
+static kern_return_t read_smc(char *key, smc_return_t *result_smc)
 {
     kern_return_t result;
     SMCParamStruct inputStruct;
@@ -191,35 +204,35 @@ static kern_return_t read_smc(char *key, smc_return_t *smc_return)
 
     memset(&inputStruct,  0, sizeof(SMCParamStruct));
     memset(&outputStruct, 0, sizeof(SMCParamStruct));
-    memset(smc_return, 0, sizeof(smc_return_t));
+    memset(result_smc,    0, sizeof(smc_return_t));
 
     // First call to AppleSMC - get key info
     inputStruct.key = to_uint32_t(key);
     inputStruct.data8 = kSMCGetKeyInfo;
 
     result = call_smc(&inputStruct, &outputStruct);
-    smc_return->kSMC = outputStruct.result;       
+    result_smc->kSMC = outputStruct.result;       
     
     if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
 
     // Store data for return
-    smc_return->dataSize = outputStruct.keyInfo.dataSize;
-    to_string(outputStruct.keyInfo.dataType, smc_return->dataType);
+    result_smc->dataSize = outputStruct.keyInfo.dataSize;
+    to_string(outputStruct.keyInfo.dataType, result_smc->dataType);
     
     // Second call to AppleSMC - now we can get the data
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
     inputStruct.data8 = kSMCReadKey;
 
     result = call_smc(&inputStruct, &outputStruct);
-    smc_return->kSMC = outputStruct.result;       
+    result_smc->kSMC = outputStruct.result;       
     
     if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
 
-    memcpy(smc_return->data, outputStruct.bytes, sizeof(outputStruct.bytes));
+    memcpy(result_smc->data, outputStruct.bytes, sizeof(outputStruct.bytes));
 
     return result;
 }
@@ -230,11 +243,44 @@ Write data to the SMC.
 
 :returns: IOReturn IOKit return code
 */
-static kern_return_t write_smc(char *key, smc_return_t *val)
+static kern_return_t write_smc(char *key, smc_return_t *result_smc)
 {
-    return kIOReturnSuccess;
-}
+    kern_return_t result;
+    SMCParamStruct inputStruct;
+    SMCParamStruct outputStruct;
 
+    memset(&inputStruct,  0, sizeof(SMCParamStruct));
+    memset(&outputStruct, 0, sizeof(SMCParamStruct));
+
+    // First call to AppleSMC - get key info
+    inputStruct.key = to_uint32_t(key);
+    inputStruct.data8 = kSMCGetKeyInfo;
+
+    result = call_smc(&inputStruct, &outputStruct);
+    result_smc->kSMC = outputStruct.result;       
+    
+    if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
+        return result;
+    }
+    
+    // Check data is correct
+    // TODO: Add dataType check
+    if (result_smc->dataSize != outputStruct.keyInfo.dataSize) {
+        return kIOReturnBadArgument;
+    }
+
+    // Second call to AppleSMC - now we can write the data
+    inputStruct.data8 = kSMCWriteKey;
+    inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
+    
+    // Set data to write
+    memcpy(outputStruct.bytes, result_smc->data, sizeof(result_smc->data));
+    
+    result = call_smc(&inputStruct, &outputStruct);
+    result_smc->kSMC = outputStruct.result;       
+    
+    return result;
+}
 
 //------------------------------------------------------------------------------
 // MARK: "PUBLIC" FUNCTIONS
@@ -403,5 +449,24 @@ WARNING: You are playing with hardware here, BE CAREFUL.
 */
 bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 {
-    return true;
+    // TODO: Add rpm val safety check
+    bool ans = false;
+    kern_return_t result;
+    smc_return_t  result_smc;
+    
+    memset(&result_smc, 0, sizeof(smc_return_t));
+
+    // TODO: Don't use magic number
+    // TODO: Set result_smc.dataType
+    result_smc.dataSize = 2;
+    to_fpe2(rpm, result_smc.data);
+
+    // FIXME: Use fan_num for key
+    result = write_smc("F0Mn", &result_smc);
+    
+    if (result == kIOReturnSuccess && result_smc.kSMC == kSMCSuccess) {
+        ans = true;
+    }    
+ 
+    return ans;
 }
