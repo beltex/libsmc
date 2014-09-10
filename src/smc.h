@@ -45,6 +45,7 @@
 
 #define IOSERVICE_SMC     "AppleSMC" 
 static const int SMC_KEY_SIZE = 4;
+static const int DATA_TYPE_SIZE = 4;
 
 
 //------------------------------------------------------------------------------
@@ -156,11 +157,11 @@ typedef struct {
 
 
 typedef struct {
-    kSMC_t  kSMC;
-    UInt32  dataSize;
-    char    dataType[5];
-    char    bytes[32];
-} SMCVal_t;
+    char     data[32];
+    char     dataType[5];
+    uint32_t dataSize;
+    kSMC_t   kSMC;
+} smc_return_t;
 
 
 //------------------------------------------------------------------------------

@@ -106,7 +106,7 @@ static void to_string(uint32_t val, char *dataType)
 {
     int shift = 24;
 
-    for (int i = 0; i < SMC_KEY_SIZE; i++) {
+    for (int i = 0; i < DATA_TYPE_SIZE; i++) {
         // To get each char, we shift it into the lower 8 bits, and then & by
         // 255 to insolate it
         dataType[i] = (val >> shift) & 0xff;
@@ -183,7 +183,7 @@ Read data from the SMC
     
 :param: key The SMC key
 */
-static kern_return_t read_smc(char *key, SMCVal_t *val)
+static kern_return_t read_smc(char *key, smc_return_t *smc_return)
 {
     kern_return_t result;
     SMCParamStruct inputStruct;
@@ -191,7 +191,7 @@ static kern_return_t read_smc(char *key, SMCVal_t *val)
 
     memset(&inputStruct,  0, sizeof(SMCParamStruct));
     memset(&outputStruct, 0, sizeof(SMCParamStruct));
-    memset(val, 0, sizeof(SMCVal_t));
+    memset(smc_return, 0, sizeof(smc_return_t));
 
     // First call to AppleSMC - get key info
     inputStruct.key = to_uint32_t(key);
@@ -202,9 +202,11 @@ static kern_return_t read_smc(char *key, SMCVal_t *val)
         return result;
     }
 
+    // Store data for return
+    smc_return->dataSize = outputStruct.keyInfo.dataSize;
+    to_string(outputStruct.keyInfo.dataType, smc_return->dataType);
+    
     // Second call to AppleSMC - now we can get the data
-    val->dataSize = outputStruct.keyInfo.dataSize;
-    to_string(outputStruct.keyInfo.dataType, val->dataType);
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
     inputStruct.data8 = kSMCReadKey;
 
@@ -213,7 +215,7 @@ static kern_return_t read_smc(char *key, SMCVal_t *val)
         return result;
     }
 
-    memcpy(val->bytes, outputStruct.bytes, sizeof(outputStruct.bytes));
+    memcpy(smc_return->data, outputStruct.bytes, sizeof(outputStruct.bytes));
 
     return result;
 }
@@ -224,7 +226,7 @@ Write data to the SMC.
 
 :returns: IOReturn IOKit return code
 */
-static kern_return_t write_smc(char *key, SMCVal_t *val)
+static kern_return_t write_smc(char *key, smc_return_t *val)
 {
     return kIOReturnSuccess;
 }
@@ -296,32 +298,33 @@ Get the current temperature from a sensor
 */
 double get_tmp(char *key, tmp_unit_t unit)
 {
-    SMCVal_t val;
     kern_return_t result;
+    smc_return_t  result_smc;
 
-    result = read_smc(key, &val);
+    result = read_smc(key, &result_smc);
     // read succeeded - check returned value
-    if (result == kIOReturnSuccess && val.dataSize > 0
-                                   && strcmp(val.dataType, DATATYPE_SP78) == 0) {
-        // convert sp78 value to temperature
-        double tmp = val.bytes[0];      
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 2   &&
+          strcmp(result_smc.dataType, DATATYPE_SP78) == 0)) {
+        // Error
+        return 0.0;
+    }
+    
+    // TODO: Create from_sp78() convert function
+    double tmp = result_smc.data[0];      
   
-        switch (unit) {
-            case CELSIUS:
-                break;
-            case FAHRENHEIT:
-                tmp = to_fahrenheit(tmp);
-                break;
-            case KELVIN:
-                tmp = to_kelvin(tmp);
-                break;
-        }
-
-        return tmp;
+    switch (unit) {
+        case CELSIUS:
+            break;
+        case FAHRENHEIT:
+            tmp = to_fahrenheit(tmp);
+            break;
+        case KELVIN:
+            tmp = to_kelvin(tmp);
+            break;
     }
 
-    // read failed
-    return 0.0;
+    return tmp;
 }
 
 
