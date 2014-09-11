@@ -169,11 +169,8 @@ static kern_return_t call_smc(SMCParamStruct *inputStruct,
                               SMCParamStruct *outputStruct)
 {
     kern_return_t result;
-    size_t inputStructCnt;
-    size_t outputStructCnt;
-
-    inputStructCnt  = sizeof(SMCParamStruct);
-    outputStructCnt = sizeof(SMCParamStruct);
+    size_t inputStructCnt  = sizeof(SMCParamStruct);
+    size_t outputStructCnt = sizeof(SMCParamStruct);
 
     result = IOConnectCallStructMethod(conn, kSMCHandleYPCEvent,
                                              inputStruct,
@@ -400,6 +397,29 @@ double get_tmp(char *key, tmp_unit_t unit)
 
 
 /**
+Get the number of fans on this machine.
+
+:returns: The number of fans. If an error occurs, return will be -1.
+*/
+int get_num_fans(void)
+{
+    kern_return_t result;
+    smc_return_t  result_smc;
+
+    result = read_smc("FNum", &result_smc);
+    
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          strcmp(result_smc.dataType, DATA_TYPE_UINT8) == 0)) {
+        // Error
+        return -1;
+    }
+
+    return result_smc.data[0];
+}
+
+
+/**
 Get the current speed (RPM - revolutions per minute) of a fan.
     
 :param: fan_num The number of the fan to check
@@ -422,17 +442,6 @@ unsigned int get_fan_rpm(unsigned int fan_num)
     }
 
     return from_fpe2(result_smc.data);
-}
-
-
-/**
-Get the number of fans on this machine.
-
-:returns: The number of fans
-*/
-unsigned int get_num_fans(void)
-{
-    return 0;
 }
 
 
