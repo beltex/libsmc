@@ -101,23 +101,23 @@ Presumed letter translations:
 
 Sources: See TMP SMC keys
 */
-#define FAN_0            = "F0Ac"
-#define FAN_0_MIN_RPM    = "F0Mn"
-#define FAN_0_MAX_RPM    = "F0Mx"
-#define FAN_0_SAFE_RPM   = "F0Sf"
-#define FAN_0_TARGET_RPM = "F0Tg"
-#define FAN_1            = "F1Ac"
-#define FAN_1_MIN_RPM    = "F1Mn"
-#define FAN_1_MAX_RPM    = "F1Mx"
-#define FAN_1_SAFE_RPM   = "F1Sf"
-#define FAN_1_TARGET_RPM = "F1Tg"
-#define FAN_2            = "F2Ac"
-#define FAN_2_MIN_RPM    = "F2Mn"
-#define FAN_2_MAX_RPM    = "F2Mx"
-#define FAN_2_SAFE_RPM   = "F2Sf"
-#define FAN_2_TARGET_RPM = "F2Tg"
-#define NUM_FANS         = "FNum"
-#define FORCE_BITS       = "FS! "
+#define FAN_0            "F0Ac"
+#define FAN_0_MIN_RPM    "F0Mn"
+#define FAN_0_MAX_RPM    "F0Mx"
+#define FAN_0_SAFE_RPM   "F0Sf"
+#define FAN_0_TARGET_RPM "F0Tg"
+#define FAN_1            "F1Ac"
+#define FAN_1_MIN_RPM    "F1Mn"
+#define FAN_1_MAX_RPM    "F1Mx"
+#define FAN_1_SAFE_RPM   "F1Sf"
+#define FAN_1_TARGET_RPM "F1Tg"
+#define FAN_2            "F2Ac"
+#define FAN_2_MIN_RPM    "F2Mn"
+#define FAN_2_MAX_RPM    "F2Mx"
+#define FAN_2_SAFE_RPM   "F2Sf"
+#define FAN_2_TARGET_RPM "F2Tg"
+#define NUM_FANS         "FNum"
+#define FORCE_BITS       "FS! "
 
 
 /**
@@ -125,7 +125,7 @@ Misc SMC keys - 4 byte multi-character constants
 
 Sources: See TMP SMC keys
 */
-#define NUM_KEYS = "#KEY"
+#define NUM_KEYS "#KEY"
 
 
 //------------------------------------------------------------------------------

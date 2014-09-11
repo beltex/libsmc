@@ -77,6 +77,7 @@ Our connection to the SMC
 */
 static io_connect_t conn;
 
+
 /**
 Number of characters in an SMC key
 */
@@ -561,7 +562,7 @@ int get_num_fans(void)
     kern_return_t result;
     smc_return_t  result_smc;
 
-    result = read_smc("FNum", &result_smc);
+    result = read_smc(NUM_FANS, &result_smc);
 
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 1   &&
@@ -583,11 +584,12 @@ Get the current speed (RPM - revolutions per minute) of a fan.
 */
 unsigned int get_fan_rpm(unsigned int fan_num)
 {
+    char key[5];
     kern_return_t result;
     smc_return_t  result_smc;
 
-    // FIXME: Use fan_num for key
-    result = read_smc("F0Ac", &result_smc);
+    sprintf(key, "F%dAc", fan_num);
+    result = read_smc(key, &result_smc);
 
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 2   &&
@@ -614,6 +616,7 @@ WARNING: You are playing with hardware here, BE CAREFUL.
 bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 {
     // TODO: Add rpm val safety check
+    char key[5];
     bool ans = false;
     kern_return_t result;
     smc_return_t  result_smc;
@@ -625,8 +628,8 @@ bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
     result_smc.dataSize = 2;
     to_fpe2(rpm, result_smc.data);
 
-    // FIXME: Use fan_num for key
-    result = write_smc("F0Mn", &result_smc);
+    sprintf(key, "F%dMn", fan_num);
+    result = write_smc(key, &result_smc);
 
     if (result == kIOReturnSuccess && result_smc.kSMC == kSMCSuccess) {
         ans = true;
