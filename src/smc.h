@@ -3,7 +3,7 @@
  * Macs. Works by talking to the AppleSMC.kext (kernel extension), the driver
  * for the SMC.
  *
- * smc.c
+ * smc.h
  * c-smc
  *
  * Copyright (C) 2014  beltex <https://github.com/beltex>
@@ -13,8 +13,8 @@
  *
  * With credits to:
  *
- * Copyright (C) 2006 devnull 
- * Apple System Management Control (SMC) Tool 
+ * Copyright (C) 2006 devnull
+ * Apple System Management Control (SMC) Tool
  *
  * Copyright (C) 2006 Hendrik Holtmann
  * smcFanControl <https://github.com/hholtmann/smcFanControl>
@@ -36,18 +36,18 @@
 
 
 //------------------------------------------------------------------------------
-// MARK: CONSTANTS
+// MARK: MACROS
 //------------------------------------------------------------------------------
 
 
 /**
 SMC keys for temperature sensors - 4 byte multi-character constants
 
-Not applicable to all Mac's of course. In adition, the definition of the 
-codes may not be 100% accurate necessarily. Finally, list is incomplete.
+Not applicable to all Mac's of course. In adition, the definition of the codes
+may not be 100% accurate necessarily. Finally, list is incomplete.
 
 Presumed letter translations:
-    
+
 - T = Temperature (if first char)
 - C = CPU
 - G = GPU
@@ -56,7 +56,7 @@ Presumed letter translations:
 - H = Heatsink
 
 Sources:
-    
+
 - https://www.apple.com/downloads/dashboard/status/istatpro.html
 - https://github.com/hholtmann/smcFanControl
 - https://github.com/jedda/OSX-Monitoring-Tools
@@ -87,18 +87,18 @@ Sources:
 
 /**
 SMC keys for fans - 4 byte multi-character constants
-    
+
 Number of fans on Macs vary of course, thus not all keys will be applicable.
-    
+
 Presumed letter translations:
-    
+
 - F  = Fan
 - Ac = Acutal
 - Mn = Min
 - Mx = Max
 - Sf = Safe
 - Tg = Target
-    
+
 Sources: See TMP SMC keys
 */
 #define FAN_0            = "F0Ac"
@@ -119,32 +119,13 @@ Sources: See TMP SMC keys
 #define NUM_FANS         = "FNum"
 #define FORCE_BITS       = "FS! "
 
-    
+
 /**
 Misc SMC keys - 4 byte multi-character constants
-    
+
 Sources: See TMP SMC keys
 */
 #define NUM_KEYS = "#KEY"
-    
-    
-/**
-SMC data types - 4 byte multi-character constants
-    
-Sources: See TMP SMC keys
-    
-http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
-*/
-#define DATA_TYPE_UINT8        "ui8 "
-#define DATA_TYPE_UINT16       "ui16"
-#define DATA_TYPE_UINT32       "ui32"
-#define DATA_TYPE_FPE2         "fpe2"
-#define DATA_TYPE_SP78         "sp78"
-
-    
-#define IOSERVICE_SMC     "AppleSMC" 
-static const int SMC_KEY_SIZE = 4;
-static const int DATA_TYPE_SIZE = 4;
 
 
 //------------------------------------------------------------------------------
@@ -157,110 +138,6 @@ typedef enum {
     FAHRENHEIT,
     KELVIN
 } tmp_unit_t;
-
-
-/**
-Defined by AppleSMC.kext. See SMCParamStruct.
-    
-These are SMC specific return codes
-*/
-typedef enum {
-    kSMCSuccess     = 0,
-    kSMCError       = 1,
-    kSMCKeyNotFound = 0x84
-} kSMC_t;
-
-
-/**
-Defined by AppleSMC.kext. See SMCParamStruct.
-    
-Method selectors
-*/
-typedef enum {
-    kSMCUserClientOpen  = 0,
-    kSMCUserClientClose = 1,
-    kSMCHandleYPCEvent  = 2,
-    kSMCReadKey         = 5,
-    kSMCWriteKey        = 6,
-    kSMCGetKeyCount     = 7,
-    kSMCGetKeyFromIndex = 8,
-    kSMCGetKeyInfo      = 9
-} selector_t;
-
-
-//------------------------------------------------------------------------------
-// MARK: STRUCTS
-//------------------------------------------------------------------------------
-
-
-/**
-Defined by AppleSMC.kext. See SMCParamStruct.
-*/
-typedef struct {
-    unsigned char  major;
-    unsigned char  minor;
-    unsigned char  build;
-    unsigned char  reserved;
-    unsigned short release;
-} SMCVersion;
-
-
-/**
-Defined by AppleSMC.kext. See SMCParamStruct.
-*/
-typedef struct {
-    uint16_t version;
-    uint16_t length;
-    uint32_t cpuPLimit;
-    uint32_t gpuPLimit;
-    uint32_t memPLimit;
-} SMCPLimitData;
-
-
-/**
-Defined by AppleSMC.kext. See SMCParamStruct.
-    
-- dataSize : How many values written to SMCParamStruct.bytes
-- dataType : Type of data written to SMCParamStruct.bytes. This lets us know how
-             to interpret it (translate it to human readable)
-*/
-typedef struct {
-    IOByteCount dataSize;
-    uint32_t    dataType;
-    uint8_t     dataAttributes;
-} SMCKeyInfoData;
-
-
-/**
-Defined by AppleSMC.kext.
-    
-This is the predefined struct that must be passed to communicate with the
-AppleSMC driver. While the driver is closed source, the definition of this
-struct happened to appear in the Apple PowerManagement project at around
-version 211, and soon after disappeared. It can be seen in the PrivateLib.c
-file under pmconfigd. 
-
-https://www.opensource.apple.com/source/PowerManagement/PowerManagement-211/
-*/
-typedef struct {
-    uint32_t       key;
-    SMCVersion     vers;
-    SMCPLimitData  pLimitData;
-    SMCKeyInfoData keyInfo;
-    uint8_t        result;
-    uint8_t        status;
-    uint8_t        data8;
-    uint32_t       data32;    
-    uint8_t        bytes[32];
-} SMCParamStruct;
-
-
-typedef struct {
-    uint8_t  data[32];
-    char     dataType[5];
-    uint32_t dataSize;
-    kSMC_t   kSMC;
-} smc_return_t;
 
 
 //------------------------------------------------------------------------------

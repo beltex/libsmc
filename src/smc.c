@@ -13,8 +13,8 @@
  *
  * With credits to:
  *
- * Copyright (C) 2006 devnull 
- * Apple System Management Control (SMC) Tool 
+ * Copyright (C) 2006 devnull
+ * Apple System Management Control (SMC) Tool
  *
  * Copyright (C) 2006 Hendrik Holtmann
  * smcFanControl <https://github.com/hholtmann/smcFanControl>
@@ -37,14 +37,169 @@
 #include <stdio.h>
 #include <string.h>
 #include <IOKit/IOKitLib.h>
-
 #include "smc.h"
+
+
+//------------------------------------------------------------------------------
+// MARK: MACROS
+//------------------------------------------------------------------------------
+
+
+/**
+Name of the SMC IOService as seen in the IORegistry. You can view it either via
+command line with ioreg or through the IORegistryExplorer app (found on Apple's
+developer site - Hardware IO Tools for Xcode)
+*/
+#define IOSERVICE_SMC "AppleSMC"
+
+
+/**
+SMC data types - 4 byte multi-character constants
+
+Sources: See TMP SMC keys in smc.h
+
+http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
+*/
+#define DATA_TYPE_UINT8  "ui8 "
+#define DATA_TYPE_UINT16 "ui16"
+#define DATA_TYPE_UINT32 "ui32"
+#define DATA_TYPE_FPE2   "fpe2"
+#define DATA_TYPE_SP78   "sp78"
+
+
+//------------------------------------------------------------------------------
+// MARK: GLOBAL VARS
+//------------------------------------------------------------------------------
 
 
 /**
 Our connection to the SMC
 */
 static io_connect_t conn;
+
+/**
+Number of characters in an SMC key
+*/
+static const int SMC_KEY_SIZE = 4;
+
+
+/**
+Number of characters in a data type "key" returned from the SMC. See data type
+macros.
+*/
+static const int DATA_TYPE_SIZE = 4;
+
+
+//------------------------------------------------------------------------------
+// MARK: ENUMS
+//------------------------------------------------------------------------------
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+
+These are SMC specific return codes
+*/
+typedef enum {
+    kSMCSuccess     = 0,
+    kSMCError       = 1,
+    kSMCKeyNotFound = 0x84
+} kSMC_t;
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+
+Method selectors
+*/
+typedef enum {
+    kSMCUserClientOpen  = 0,
+    kSMCUserClientClose = 1,
+    kSMCHandleYPCEvent  = 2,
+    kSMCReadKey         = 5,
+    kSMCWriteKey        = 6,
+    kSMCGetKeyCount     = 7,
+    kSMCGetKeyFromIndex = 8,
+    kSMCGetKeyInfo      = 9
+} selector_t;
+
+
+//------------------------------------------------------------------------------
+// MARK: STRUCTS
+//------------------------------------------------------------------------------
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+*/
+typedef struct {
+    unsigned char  major;
+    unsigned char  minor;
+    unsigned char  build;
+    unsigned char  reserved;
+    unsigned short release;
+} SMCVersion;
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+*/
+typedef struct {
+    uint16_t version;
+    uint16_t length;
+    uint32_t cpuPLimit;
+    uint32_t gpuPLimit;
+    uint32_t memPLimit;
+} SMCPLimitData;
+
+
+/**
+Defined by AppleSMC.kext. See SMCParamStruct.
+
+- dataSize : How many values written to SMCParamStruct.bytes
+- dataType : Type of data written to SMCParamStruct.bytes. This lets us know how
+             to interpret it (translate it to human readable)
+*/
+typedef struct {
+    IOByteCount dataSize;
+    uint32_t    dataType;
+    uint8_t     dataAttributes;
+} SMCKeyInfoData;
+
+
+/**
+Defined by AppleSMC.kext.
+
+This is the predefined struct that must be passed to communicate with the
+AppleSMC driver. While the driver is closed source, the definition of this
+struct happened to appear in the Apple PowerManagement project at around
+version 211, and soon after disappeared. It can be seen in the PrivateLib.c
+file under pmconfigd.
+
+https://www.opensource.apple.com/source/PowerManagement/PowerManagement-211/
+*/
+typedef struct {
+    uint32_t       key;
+    SMCVersion     vers;
+    SMCPLimitData  pLimitData;
+    SMCKeyInfoData keyInfo;
+    uint8_t        result;
+    uint8_t        status;
+    uint8_t        data8;
+    uint32_t       data32;
+    uint8_t        bytes[32];
+} SMCParamStruct;
+
+
+/**
+Used for returning data from the SMC.
+*/
+typedef struct {
+    uint8_t  data[32];
+    char     dataType[5];
+    uint32_t dataSize;
+    kSMC_t   kSMC;
+} smc_return_t;
 
 
 //------------------------------------------------------------------------------
@@ -54,14 +209,14 @@ static io_connect_t conn;
 
 /**
 Convert data from SMC of fpe2 type to human readable.
-    
+
 :param: data Data from the SMC to be converted. Assumed data size of 2.
 :returns: Converted data
 */
 static unsigned int from_fpe2(uint8_t data[32])
 {
     unsigned int ans = 0;
-    
+
     // Data type for fan calls - fpe2
     // This is assumend to mean floating point, with 2 exponent bits
     // http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
@@ -81,13 +236,13 @@ Convert to fpe2 data type to be passed to SMC.
 static void to_fpe2(unsigned int val, uint8_t *data)
 {
     data[0] = val >> 6;
-    data[1] = (val << 2) ^ (data[0] << 8); 
+    data[1] = (val << 2) ^ (data[0] << 8);
 }
 
 
 /**
 Convert SMC key to uint32_t. This must be done to pass it to the SMC.
-    
+
 :param: key The SMC key to convert
 :returns: uint32_t translation.
           Returns zero if key is not 4 characters in length.
@@ -160,7 +315,7 @@ static double to_kelvin(double tmp)
 
 /**
 Make a call to the SMC
-    
+
 :param: inputStruct Struct that holds data telling the SMC what you want
 :param: outputStruct Struct holding the SMC's response
 :returns: I/O Kit return code
@@ -177,7 +332,7 @@ static kern_return_t call_smc(SMCParamStruct *inputStruct,
                                              inputStructCnt,
                                              outputStruct,
                                              &outputStructCnt);
-    
+
     if (result != kIOReturnSuccess) {
         // IOReturn error code lookup. See "Accessing Hardware From Applications
         // -> Handling Errors" Apple doc
@@ -190,7 +345,7 @@ static kern_return_t call_smc(SMCParamStruct *inputStruct,
 
 /**
 Read data from the SMC
-    
+
 :param: key The SMC key
 */
 static kern_return_t read_smc(char *key, smc_return_t *result_smc)
@@ -208,8 +363,8 @@ static kern_return_t read_smc(char *key, smc_return_t *result_smc)
     inputStruct.data8 = kSMCGetKeyInfo;
 
     result = call_smc(&inputStruct, &outputStruct);
-    result_smc->kSMC = outputStruct.result;       
-    
+    result_smc->kSMC = outputStruct.result;
+
     if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
@@ -217,14 +372,14 @@ static kern_return_t read_smc(char *key, smc_return_t *result_smc)
     // Store data for return
     result_smc->dataSize = outputStruct.keyInfo.dataSize;
     to_string(outputStruct.keyInfo.dataType, result_smc->dataType);
-    
+
     // Second call to AppleSMC - now we can get the data
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
     inputStruct.data8 = kSMCReadKey;
 
     result = call_smc(&inputStruct, &outputStruct);
-    result_smc->kSMC = outputStruct.result;       
-    
+    result_smc->kSMC = outputStruct.result;
+
     if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
@@ -254,12 +409,12 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
     inputStruct.data8 = kSMCGetKeyInfo;
 
     result = call_smc(&inputStruct, &outputStruct);
-    result_smc->kSMC = outputStruct.result;       
-    
+    result_smc->kSMC = outputStruct.result;
+
     if (result != kIOReturnSuccess || outputStruct.result != kSMCSuccess) {
         return result;
     }
-    
+
     // Check data is correct
     // TODO: Add dataType check
     if (result_smc->dataSize != outputStruct.keyInfo.dataSize) {
@@ -269,13 +424,13 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
     // Second call to AppleSMC - now we can write the data
     inputStruct.data8 = kSMCWriteKey;
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
-    
+
     // Set data to write
     memcpy(outputStruct.bytes, result_smc->data, sizeof(result_smc->data));
-    
+
     result = call_smc(&inputStruct, &outputStruct);
-    result_smc->kSMC = outputStruct.result;       
-    
+    result_smc->kSMC = outputStruct.result;
+
     return result;
 }
 
@@ -286,7 +441,7 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
 
 /**
 Open a connection to the SMC
-    
+
 :returns: kIOReturnSuccess on successful connection to the SMC.
 */
 kern_return_t open_smc(void)
@@ -296,7 +451,7 @@ kern_return_t open_smc(void)
 
     service = IOServiceGetMatchingService(kIOMasterPortDefault,
                                           IOServiceMatching(IOSERVICE_SMC));
-   
+
     if (service == 0) {
         // NOTE: IOServiceMatching documents 0 on failure
         printf("ERROR: %s NOT FOUND\n", IOSERVICE_SMC);
@@ -312,7 +467,7 @@ kern_return_t open_smc(void)
 
 /**
 Close connection to the SMC
-    
+
 :returns: kIOReturnSuccess on successful close of connection to the SMC.
 */
 kern_return_t close_smc(void)
@@ -324,7 +479,7 @@ kern_return_t close_smc(void)
 /**
 Check if an SMC key is valid. Useful for determining if a certain machine has
 particular sensor or fan for example.
-    
+
 :param: key The SMC key to check. 4 byte multi-character constant. Must be 4
             characters in length.
 :returns: True if the key is found, false otherwise
@@ -334,15 +489,15 @@ bool is_key_valid(char *key)
     bool ans = false;
     kern_return_t result;
     smc_return_t  result_smc;
-  
+
     if (strlen(key) != SMC_KEY_SIZE) {
         printf("ERROR: Invalid key size - must be 4 chars\n");
         return ans;
     }
- 
+
     // Try a read and see if it succeeds
     result = read_smc(key, &result_smc);
-    
+
     if (result == kIOReturnSuccess && result_smc.kSMC == kSMCSuccess) {
         ans = true;
     }
@@ -353,7 +508,7 @@ bool is_key_valid(char *key)
 
 /**
 Get the current temperature from a sensor
-    
+
 :param: key The temperature sensor to read from
 :param: unit The unit for the temperature value.
 :returns: Temperature of sensor. If the sensor is not found, or an error
@@ -365,17 +520,17 @@ double get_tmp(char *key, tmp_unit_t unit)
     smc_return_t  result_smc;
 
     result = read_smc(key, &result_smc);
-    
+
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 2   &&
           strcmp(result_smc.dataType, DATA_TYPE_SP78) == 0)) {
         // Error
         return 0.0;
     }
-    
+
     // TODO: Create from_sp78() convert function
-    double tmp = result_smc.data[0];      
-  
+    double tmp = result_smc.data[0];
+
     switch (unit) {
         case CELSIUS:
             break;
@@ -407,7 +562,7 @@ int get_num_fans(void)
     smc_return_t  result_smc;
 
     result = read_smc("FNum", &result_smc);
-    
+
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 1   &&
           strcmp(result_smc.dataType, DATA_TYPE_UINT8) == 0)) {
@@ -421,7 +576,7 @@ int get_num_fans(void)
 
 /**
 Get the current speed (RPM - revolutions per minute) of a fan.
-    
+
 :param: fan_num The number of the fan to check
 :returns: The fan RPM. If the fan is not found, or an error occurs, return
           will be zero
@@ -462,7 +617,7 @@ bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
     bool ans = false;
     kern_return_t result;
     smc_return_t  result_smc;
-    
+
     memset(&result_smc, 0, sizeof(smc_return_t));
 
     // TODO: Don't use magic number
@@ -472,10 +627,10 @@ bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 
     // FIXME: Use fan_num for key
     result = write_smc("F0Mn", &result_smc);
-    
+
     if (result == kIOReturnSuccess && result_smc.kSMC == kSMCSuccess) {
         ans = true;
-    }    
- 
+    }
+
     return ans;
 }
