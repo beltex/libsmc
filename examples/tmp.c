@@ -9,8 +9,8 @@ int main()
         return -1;
     }
 
-    printf("%0.1f°C\n", get_tmp(SMC_KEY_CPU_TEMP, CELSIUS));
-    printf("%d RPM\n", get_fan_rpm(0));
+    printf("%0.1f°C\n", get_tmp(CPU_0_DIODE, CELSIUS));
+    
     close_smc();
 
     return 0;
