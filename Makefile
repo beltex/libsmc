@@ -3,7 +3,7 @@ CFLAGS = -mmacosx-version-min=10.6 -std=c99 -arch x86_64 -O2 -Wall
 INC    = -framework IOKit
 EXEC   = c-smc
 
-$(EXEC): src/smc.c examples/tmp.c
+$(EXEC): src/*.c examples/*.c
 	$(CC) $(CFLAGS) $(INC) -o $@ $?
 
 clean: 
