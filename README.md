@@ -31,6 +31,17 @@ For more see:
 - OS X 10.6+
 
 
+### Credits
+
+- Based off of fork from [osx-cpu-temp](https://github.com/lavoiesl/osx-cpu-temp)
+
+With credits to:
+
+- Apple System Management Control (SMC) Tool by devnull
+- [smcFanControl](https://github.com/hholtmann/smcFanControl)
+- [iStat Pro](https://www.apple.com/downloads/dashboard/status/istatpro.html)
+
+
 ### References
 
 Handy I/O Kit references:
