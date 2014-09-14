@@ -111,7 +111,7 @@ typedef enum {
 /**
 Defined by AppleSMC.kext. See SMCParamStruct.
 
-Method selectors
+Function selectors. Used to tell the SMC which function inside it to call.
 */
 typedef enum {
     kSMCUserClientOpen  = 0,
@@ -197,7 +197,7 @@ Used for returning data from the SMC.
 */
 typedef struct {
     uint8_t  data[32];
-    char     dataType[5];
+    uint32_t dataType;
     uint32_t dataSize;
     kSMC_t   kSMC;
 } smc_return_t;
@@ -372,7 +372,8 @@ static kern_return_t read_smc(char *key, smc_return_t *result_smc)
 
     // Store data for return
     result_smc->dataSize = outputStruct.keyInfo.dataSize;
-    to_string(outputStruct.keyInfo.dataType, result_smc->dataType);
+    result_smc->dataType = outputStruct.keyInfo.dataType;    
+    
 
     // Second call to AppleSMC - now we can get the data
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
@@ -417,8 +418,8 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
     }
 
     // Check data is correct
-    // TODO: Add dataType check
-    if (result_smc->dataSize != outputStruct.keyInfo.dataSize) {
+    if (result_smc->dataSize != outputStruct.keyInfo.dataSize ||
+        result_smc->dataType != outputStruct.keyInfo.dataType) {
         return kIOReturnBadArgument;
     }
 
@@ -524,7 +525,7 @@ double get_tmp(char *key, tmp_unit_t unit)
 
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 2   &&
-          strcmp(result_smc.dataType, DATA_TYPE_SP78) == 0)) {
+          result_smc.dataType == to_uint32_t(DATA_TYPE_SP78))) {
         // Error
         return 0.0;
     }
@@ -566,7 +567,7 @@ int get_num_fans(void)
 
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 1   &&
-          strcmp(result_smc.dataType, DATA_TYPE_UINT8) == 0)) {
+          result_smc.dataType == to_uint32_t(DATA_TYPE_UINT8))) {
         // Error
         return -1;
     }
@@ -593,7 +594,7 @@ unsigned int get_fan_rpm(unsigned int fan_num)
 
     if (!(result == kIOReturnSuccess &&
           result_smc.dataSize == 2   &&
-          strcmp(result_smc.dataType, DATA_TYPE_FPE2) == 0)) {
+          result_smc.dataType == to_uint32_t(DATA_TYPE_FPE2))) {
         // Error
         return 0;
     }
@@ -603,8 +604,9 @@ unsigned int get_fan_rpm(unsigned int fan_num)
 
 
 /**
-Set the speed (RPM - revolutions per minute) of a fan. This method requires root
-privlages.
+Set the minimum speed (RPM - revolutions per minute) of a fan. This method
+requires root privileges. By minimum we mean that OS X can interject and
+raise the fan speed if needed, however it will not go below this.
 
 WARNING: You are playing with hardware here, BE CAREFUL.
 
@@ -626,6 +628,7 @@ bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
     // TODO: Don't use magic number
     // TODO: Set result_smc.dataType
     result_smc.dataSize = 2;
+    result_smc.dataType = to_uint32_t(DATA_TYPE_FPE2); 
     to_fpe2(rpm, result_smc.data);
 
     sprintf(key, "F%dMn", fan_num);
