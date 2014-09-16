@@ -626,7 +626,6 @@ bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
     memset(&result_smc, 0, sizeof(smc_return_t));
 
     // TODO: Don't use magic number
-    // TODO: Set result_smc.dataType
     result_smc.dataSize = 2;
     result_smc.dataType = to_uint32_t(DATA_TYPE_FPE2); 
     to_fpe2(rpm, result_smc.data);
