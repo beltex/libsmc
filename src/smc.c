@@ -36,7 +36,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <IOKit/IOKitLib.h>
 #include "smc.h"
 
 
