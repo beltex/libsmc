@@ -49,7 +49,13 @@ Name of the SMC IOService as seen in the IORegistry. You can view it either via
 command line with ioreg or through the IORegistryExplorer app (found on Apple's
 developer site - Hardware IO Tools for Xcode)
 */
-#define IOSERVICE_SMC "AppleSMC"
+#define IOSERVICE_SMC   "AppleSMC"
+
+
+/**
+IOService for getting machine model name
+*/
+#define IOSERVICE_MODEL "IOPlatformExpertDevice"
 
 
 /**
@@ -434,6 +440,31 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
 
     return result;
 }
+
+
+/**
+Get the model name of the machine.
+*/
+static kern_return_t get_machine_model(io_name_t model)
+{
+    io_service_t  service;
+    kern_return_t result;
+    
+    service = IOServiceGetMatchingService(kIOMasterPortDefault,
+                                          IOServiceMatching(IOSERVICE_MODEL));
+    
+    if (service == 0) {
+        printf("ERROR: %s NOT FOUND\n", IOSERVICE_MODEL);
+        return kIOReturnError;
+    }
+
+    // Get the model name
+    result = IORegistryEntryGetName(service, model);
+    IOObjectRelease(service);
+
+    return result;
+} 
+
 
 //------------------------------------------------------------------------------
 // MARK: "PUBLIC" FUNCTIONS

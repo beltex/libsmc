@@ -26,9 +26,28 @@ For more see:
 - [Power Management Unit](http://en.wikipedia.org/wiki/Power_Management_Unit)
 
 
+### Install
+
+Via [clib](https://github.com/clibs/clib)
+
+```bash
+$ clib install c-smc
+```
+
+
 ### Requirements
 
 - OS X 10.6+
+
+
+### C vs Swift
+
+While the [Swift](https://github.com/beltex/swift-smc) based version of the API
+is preferred, there are several reasons why the C based one might be needed:
+
+- Wider OS X target range
+    - Since Swift on OS X is only supported on 10.9 and above
+- Application written primarily in C
 
 
 ### Credits
