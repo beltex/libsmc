@@ -68,6 +68,7 @@ http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
 #define DATA_TYPE_UINT8  "ui8 "
 #define DATA_TYPE_UINT16 "ui16"
 #define DATA_TYPE_UINT32 "ui32"
+#define DATA_TYPE_FLAG   "flag"
 #define DATA_TYPE_FPE2   "fpe2"
 #define DATA_TYPE_SP78   "sp78"
 
@@ -575,6 +576,29 @@ double get_tmp(char *key, tmp_unit_t unit)
     }
 
     return tmp;
+}
+
+
+/**
+Is the machine being powered by the battery?
+
+:returns: True if it is, false otherwise
+*/
+bool is_battery_powered(void)
+{
+    kern_return_t result;
+    smc_return_t  result_smc;
+
+    result = read_smc(BATT_PWR, &result_smc);
+
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_FLAG))) {
+        // Error
+        return false;
+    }
+
+    return result_smc.data[0] == 1 ? true : false;
 }
 
 
