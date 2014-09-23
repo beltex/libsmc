@@ -127,8 +127,9 @@ Misc SMC keys - 4 byte multi-character constants
 
 Sources: See TMP SMC keys
 */
-#define NUM_KEYS "#KEY"
 #define BATT_PWR "BATP"
+#define NUM_KEYS "#KEY"
+#define ODD_FULL "MSDI"
 
 
 //------------------------------------------------------------------------------
@@ -153,6 +154,7 @@ kern_return_t close_smc(void);
 bool is_key_valid(char *key);
 double get_tmp(char *key, tmp_unit_t unit);
 bool is_battery_powered(void);
+bool is_optical_disk_drive_full(void);
 int get_num_fans(void);
 UInt get_fan_rpm(UInt fan_num);
 bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth);

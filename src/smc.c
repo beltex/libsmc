@@ -602,6 +602,29 @@ bool is_battery_powered(void)
 }
 
 
+/**
+Is there a CD in the optical disk drive (ODD)?
+    
+:returns: True if there is, false otherwise
+*/
+bool is_optical_disk_drive_full(void)
+{
+    kern_return_t result;
+    smc_return_t  result_smc;
+
+    result = read_smc(ODD_FULL, &result_smc);
+
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_FLAG))) {
+        // Error
+        return false;
+    }
+
+    return result_smc.data[0] == 1 ? true : false;
+}
+
+
 //------------------------------------------------------------------------------
 // MARK: FAN FUNCTIONS
 //------------------------------------------------------------------------------
