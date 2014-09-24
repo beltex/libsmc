@@ -598,7 +598,7 @@ bool is_battery_powered(void)
         return false;
     }
 
-    return result_smc.data[0] == 1 ? true : false;
+    return result_smc.data[0];
 }
 
 
@@ -621,7 +621,7 @@ bool is_optical_disk_drive_full(void)
         return false;
     }
 
-    return result_smc.data[0] == 1 ? true : false;
+    return result_smc.data[0];
 }
 
 
