@@ -472,11 +472,6 @@ static kern_return_t get_machine_model(io_name_t model)
 //------------------------------------------------------------------------------
 
 
-/**
-Open a connection to the SMC
-
-:returns: kIOReturnSuccess on successful connection to the SMC.
-*/
 kern_return_t open_smc(void)
 {
     kern_return_t result;
@@ -498,25 +493,12 @@ kern_return_t open_smc(void)
 }
 
 
-/**
-Close connection to the SMC
-
-:returns: kIOReturnSuccess on successful close of connection to the SMC.
-*/
 kern_return_t close_smc(void)
 {
     return IOServiceClose(conn);
 }
 
 
-/**
-Check if an SMC key is valid. Useful for determining if a certain machine has
-particular sensor or fan for example.
-
-:param: key The SMC key to check. 4 byte multi-character constant. Must be 4
-            characters in length.
-:returns: True if the key is found, false otherwise
-*/
 bool is_key_valid(char *key)
 {
     bool ans = false;
@@ -539,14 +521,6 @@ bool is_key_valid(char *key)
 }
 
 
-/**
-Get the current temperature from a sensor
-
-:param: key The temperature sensor to read from
-:param: unit The unit for the temperature value.
-:returns: Temperature of sensor. If the sensor is not found, or an error
-          occurs, return will be zero
-*/
 double get_tmp(char *key, tmp_unit_t unit)
 {
     kern_return_t result;
@@ -579,11 +553,6 @@ double get_tmp(char *key, tmp_unit_t unit)
 }
 
 
-/**
-Is the machine being powered by the battery?
-
-:returns: True if it is, false otherwise
-*/
 bool is_battery_powered(void)
 {
     kern_return_t result;
@@ -602,11 +571,6 @@ bool is_battery_powered(void)
 }
 
 
-/**
-Is there a CD in the optical disk drive (ODD)?
-    
-:returns: True if there is, false otherwise
-*/
 bool is_optical_disk_drive_full(void)
 {
     kern_return_t result;
@@ -630,11 +594,6 @@ bool is_optical_disk_drive_full(void)
 //------------------------------------------------------------------------------
 
 
-/**
-Get the number of fans on this machine.
-
-:returns: The number of fans. If an error occurs, return will be -1.
-*/
 int get_num_fans(void)
 {
     kern_return_t result;
@@ -653,13 +612,6 @@ int get_num_fans(void)
 }
 
 
-/**
-Get the current speed (RPM - revolutions per minute) of a fan.
-
-:param: fan_num The number of the fan to check
-:returns: The fan RPM. If the fan is not found, or an error occurs, return
-          will be zero
-*/
 unsigned int get_fan_rpm(unsigned int fan_num)
 {
     char key[5];
@@ -680,18 +632,6 @@ unsigned int get_fan_rpm(unsigned int fan_num)
 }
 
 
-/**
-Set the minimum speed (RPM - revolutions per minute) of a fan. This method
-requires root privileges. By minimum we mean that OS X can interject and
-raise the fan speed if needed, however it will not go below this.
-
-WARNING: You are playing with hardware here, BE CAREFUL.
-
-:param: fan_num The number of the fan to set
-:param: rpm The speed you would like to set the fan to.
-:param: auth Should the function do authentication?
-:return: True if successful, false otherwise
-*/
 bool set_fan_min_rpm(unsigned int fan_num, unsigned int rpm, bool auth)
 {
     // TODO: Add rpm val safety check
