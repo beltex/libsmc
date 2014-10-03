@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "repo": "beltex/libsmc",
   "description": "Apple SMC API in C",
-  "keywords:" ["apple", "osx", "smc"],
+  "keywords": ["apple", "osx", "smc"],
   "license": "GPLv2.0"
 }
