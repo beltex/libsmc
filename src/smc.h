@@ -4,7 +4,7 @@
  * for the SMC.
  *
  * smc.h
- * c-smc
+ * libsmc
  *
  * Copyright (C) 2014  beltex <https://github.com/beltex>
  *

@@ -4,7 +4,7 @@
  * for the SMC.
  *
  * smc.c
- * c-smc
+ * libsmc
  *
  * Copyright (C) 2014  beltex <https://github.com/beltex>
  *
@@ -49,7 +49,7 @@ Name of the SMC IOService as seen in the IORegistry. You can view it either via
 command line with ioreg or through the IORegistryExplorer app (found on Apple's
 developer site - Hardware IO Tools for Xcode)
 */
-#define IOSERVICE_SMC   "AppleSMC"
+#define IOSERVICE_SMC "AppleSMC"
 
 
 /**

@@ -1,4 +1,4 @@
-c-smc
+libsmc
 =====
 
 Apple System Management Controller (SMC) API in pure C from user space for Intel
@@ -31,7 +31,7 @@ For more see:
 Via [clib](https://github.com/clibs/clib)
 
 ```bash
-$ clib install c-smc
+$ clib install libsmc
 ```
 
 

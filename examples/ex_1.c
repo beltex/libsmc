@@ -2,7 +2,7 @@
  * Simple example client.
  *
  * ex_1.c
- * c-smc
+ * libsmc
  *
  * Copyright (C) 2014  beltex <https://github.com/beltex>
  *
