@@ -22,7 +22,7 @@
  */
 
 #include <stdio.h>
-#include "../src/smc.h"
+#include "../include/smc.h"
 
 int main()
 {

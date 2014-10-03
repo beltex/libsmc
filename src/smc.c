@@ -36,7 +36,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "smc.h"
+#include "../include/smc.h"
 
 
 //------------------------------------------------------------------------------
