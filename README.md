@@ -31,7 +31,7 @@ For more see:
 Via [clib](https://github.com/clibs/clib)
 
 ```bash
-$ clib install libsmc
+$ clib install beltex/libsmc
 ```
 
 

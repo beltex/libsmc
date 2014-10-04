@@ -16,6 +16,11 @@
 *.la
 *.lo
 
+# Shared objects
+*.so
+*.so.*
+*.dylib
+
 # Executables
 *.exe
 *.out

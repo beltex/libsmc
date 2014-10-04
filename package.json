@@ -4,5 +4,7 @@
   "repo": "beltex/libsmc",
   "description": "Apple SMC API in C",
   "keywords": ["apple", "osx", "smc"],
-  "license": "GPLv2.0"
+  "license": "GPLv2.0",
+  "install": "make dynamic",
+  "src": ["include/smc.h"]
 }
