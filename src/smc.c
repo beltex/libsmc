@@ -70,6 +70,7 @@ http://stackoverflow.com/questions/22160746/fpe2-and-sp78-data-types
 #define DATA_TYPE_UINT32 "ui32"
 #define DATA_TYPE_FLAG   "flag"
 #define DATA_TYPE_FPE2   "fpe2"
+#define DATA_TYPE_SFDS   "{fds"
 #define DATA_TYPE_SP78   "sp78"
 
 
@@ -592,6 +593,47 @@ bool is_optical_disk_drive_full(void)
 //------------------------------------------------------------------------------
 // MARK: FAN FUNCTIONS
 //------------------------------------------------------------------------------
+
+
+bool get_fan_name(unsigned int fan_num, fan_name_t name)
+{
+    char key[5];
+    kern_return_t result;
+    smc_return_t  result_smc;
+    
+    sprintf(key, "F%dID", fan_num);
+    result = read_smc(key, &result_smc);
+
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 16   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_SFDS))) {
+      return false;
+    }
+
+  
+    /*
+    We know the data size is 16 bytes and the type is "{fds", a custom
+    struct defined by the AppleSMC.kext. See TMP enum sources for the
+    struct.
+        
+    The last 12 bytes contain the name of the fan, an array of chars, hence
+    the loop range.
+    */
+    int index = 0; 
+    for (int i = 4; i < 16; i++) {
+        // Check if at the end (name may not be full 12 bytes)
+        // Could check for 0 (null), but instead we check for 32 (space). This
+        // is a hack to remove whitespace. :)
+        if (result_smc.data[i] == 32) {
+            break;
+        }
+
+        name[index] = result_smc.data[i];
+        index++;
+    }
+
+    return true;
+}
 
 
 int get_num_fans(void)

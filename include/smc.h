@@ -133,6 +133,14 @@ Sources: See TMP SMC keys
 
 
 //------------------------------------------------------------------------------
+// MARK: TYPES
+//------------------------------------------------------------------------------
+
+
+typedef char fan_name_t[13];
+
+
+//------------------------------------------------------------------------------
 // MARK: ENUMS
 //------------------------------------------------------------------------------
 
@@ -201,6 +209,15 @@ Is there a CD in the optical disk drive (ODD)?
 :returns: True if there is, false otherwise
 */
 bool is_optical_disk_drive_full(void);
+
+
+/**
+Get the name of a fan.
+    
+:param: fanNum The number of the fan to check
+:param: name The name of the fan. Return will be empty on error.
+*/
+bool get_fan_name(unsigned int fan_num, fan_name_t name);
 
 
 /**
