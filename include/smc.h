@@ -127,9 +127,10 @@ Misc SMC keys - 4 byte multi-character constants
 
 Sources: See TMP SMC keys
 */
-#define BATT_PWR "BATP"
-#define NUM_KEYS "#KEY"
-#define ODD_FULL "MSDI"
+#define BATT_INFO "BSIn"
+#define BATT_PWR  "BATP"
+#define NUM_KEYS  "#KEY"
+#define ODD_FULL  "MSDI"
 
 
 //------------------------------------------------------------------------------
@@ -196,6 +197,27 @@ double get_tmp(char *key, tmp_unit_t unit);
 
 
 /**
+Is there a CD in the optical disk drive (ODD)?
+
+:returns: True if there is, false otherwise
+*/
+bool is_optical_disk_drive_full(void);
+
+
+//------------------------------------------------------------------------------
+// MARK: PROTOTYPES - BATTERY/POWER
+//------------------------------------------------------------------------------
+
+
+/**
+Is AC power present?
+
+:returns: True if it is, false otherwise
+*/    
+bool is_ac_present(void);
+
+
+/**
 Is the machine being powered by the battery?
 
 :returns: True if it is, false otherwise
@@ -204,11 +226,25 @@ bool is_battery_powered(void);
 
 
 /**
-Is there a CD in the optical disk drive (ODD)?
+Is the battery ok? Currently no details on exactly what this entails. Even
+if service battery warning is given by OS X, this still seems to return OK.
 
-:returns: True if there is, false otherwise
+:returns: True if it is, false otherwise
 */
-bool is_optical_disk_drive_full(void);
+bool is_battery_ok(void);
+
+
+/**
+Is the machine charing?
+
+:returns: True if it is, false otherwise
+*/
+bool is_charging(void);
+
+
+//------------------------------------------------------------------------------
+// MARK: PROTOTYPES - FAN
+//------------------------------------------------------------------------------
 
 
 /**

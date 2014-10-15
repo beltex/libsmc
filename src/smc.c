@@ -469,7 +469,7 @@ static kern_return_t get_machine_model(io_name_t model)
 
 
 //------------------------------------------------------------------------------
-// MARK: "PUBLIC" FUNCTIONS
+// MARK: PUBLIC FUNCTIONS
 //------------------------------------------------------------------------------
 
 
@@ -554,24 +554,6 @@ double get_tmp(char *key, tmp_unit_t unit)
 }
 
 
-bool is_battery_powered(void)
-{
-    kern_return_t result;
-    smc_return_t  result_smc;
-
-    result = read_smc(BATT_PWR, &result_smc);
-
-    if (!(result == kIOReturnSuccess &&
-          result_smc.dataSize == 1   &&
-          result_smc.dataType == to_uint32_t(DATA_TYPE_FLAG))) {
-        // Error
-        return false;
-    }
-
-    return result_smc.data[0];
-}
-
-
 bool is_optical_disk_drive_full(void)
 {
     kern_return_t result;
@@ -591,7 +573,81 @@ bool is_optical_disk_drive_full(void)
 
 
 //------------------------------------------------------------------------------
-// MARK: FAN FUNCTIONS
+// MARK: PUBLIC FUNCTIONS - BATTERY/POWER
+//------------------------------------------------------------------------------
+
+
+bool is_ac_present(void)
+{
+    smc_return_t  result_smc;
+
+    const kern_return_t result = read_smc(BATT_INFO, &result_smc);
+ 
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_UINT8))) {
+        return false;
+    }
+
+    // Second bit contains the AC present flag
+    return (result_smc.data[0] >> 1) & 1;
+}
+
+
+bool is_battery_ok(void)
+{
+    smc_return_t  result_smc;
+
+    const kern_return_t result = read_smc(BATT_INFO, &result_smc);
+ 
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_UINT8))) {
+        return false;
+    }
+
+    // Sixth bit contains the battery ok flag
+    return (result_smc.data[0] >> 6) & 1;
+}
+
+
+bool is_battery_powered(void)
+{
+    kern_return_t result;
+    smc_return_t  result_smc;
+
+    result = read_smc(BATT_PWR, &result_smc);
+
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_FLAG))) {
+        // Error
+        return false;
+    }
+
+    return result_smc.data[0];
+}
+
+
+bool is_charging(void)
+{
+    smc_return_t  result_smc;
+
+    const kern_return_t result = read_smc(BATT_INFO, &result_smc);
+ 
+    if (!(result == kIOReturnSuccess &&
+          result_smc.dataSize == 1   &&
+          result_smc.dataType == to_uint32_t(DATA_TYPE_UINT8))) {
+        return false;
+    }
+
+    // First bit contains the charging flag
+    return result_smc.data[0] & 1;
+}
+
+
+//------------------------------------------------------------------------------
+// MARK: PUBLIC FUNCTIONS - FAN
 //------------------------------------------------------------------------------
 
 
