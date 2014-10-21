@@ -5,7 +5,7 @@ Apple System Management Controller (SMC) API in pure C from user space for Intel
 based Macs. The API works by talking to the AppleSMC.kext (kernel
 extension), the closed source driver for the SMC.
 
-For a Swift based version see [swift-smc](https://github.com/beltex/swift-smc).
+For a Swift based version see [SMCKit](https://github.com/beltex/SMCKit).
 
 
 ### System Management Controller
