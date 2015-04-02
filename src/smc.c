@@ -435,7 +435,7 @@ static kern_return_t write_smc(char *key, smc_return_t *result_smc)
     inputStruct.keyInfo.dataSize = outputStruct.keyInfo.dataSize;
 
     // Set data to write
-    memcpy(outputStruct.bytes, result_smc->data, sizeof(result_smc->data));
+    memcpy(inputStruct.bytes, result_smc->data, sizeof(result_smc->data));
 
     result = call_smc(&inputStruct, &outputStruct);
     result_smc->kSMC = outputStruct.result;
